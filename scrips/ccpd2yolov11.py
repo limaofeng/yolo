@@ -59,4 +59,4 @@ if __name__ == '__main__':
 
     txt_translate(trainDir, train_txt_path)
     txt_translate(validDir, val_txt_path)
-    txt_translate(testDir, test_txt_path)
+    txt_translate(detectDir, test_txt_path)
