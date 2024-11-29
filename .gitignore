@@ -1,0 +1,6 @@
+datasets/ccpd-2019
+datasets/coco8
+datasets/dota8
+data/CCPD2019
+runs/*
+*.pt
