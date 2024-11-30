@@ -14,8 +14,11 @@ project_path = os.path.dirname(current_path)
 # https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data#2-create-labels
 from PIL import Image
 # CCPD车牌有重复，应该是不同角度或者模糊程度
-path = project_path + "/datasets/ccpd-2019/images/train" 
+path = project_path + "/datasets/ccpd-2019/images/test"
 
+dest_path = project_path + "/datasets/ccpd-2019/rec_images/test"
+
+os.makedirs(dest_path, exist_ok=True)
 
 provinces = ["皖", "沪", "津", "渝", "冀", "晋", "蒙", "辽", "吉", "黑", "苏", "浙", "京", "闽", "赣", "鲁", "豫", "鄂", "湘", "粤", "桂", "琼", "川", "贵", "云", "藏", "陕", "甘", "青", "宁", "新", "警", "学", "O"]
 alphabets = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',
@@ -55,7 +58,7 @@ for filename in os.listdir(path):
     img = img.resize((94, 24), Image.LANCZOS)
     img = np.asarray(img)  # 转成array,变成24*94*3
 
-    cv2.imencode('.jpg', img)[1].tofile(project_path + "/datasets/ccpd-2019/rec_images/train/{}.jpg".format(result))
+    cv2.imencode('.jpg', img)[1].tofile(dest_path + "/{}.jpg".format(result))
     # 图片中文名会报错
     # cv2.imwrite(r"K:\MyProject\datasets\ccpd\new\ccpd_2020\rec_images\train\{}.jpg".format(result), img)  # 改成自己存放的路径
 print("共生成{}张".format(num))

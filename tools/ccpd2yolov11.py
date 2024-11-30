@@ -40,8 +40,7 @@ def txt_translate(path, txt_path):
             f.write(str(0) + " " + str(cx) + " " + str(cy) + " " + str(width) + " " + str(height))
 
 
-current_path = os.getcwd()
-project_path = os.path.dirname(current_path)
+project_path = os.getcwd()
 
 if __name__ == '__main__':
     # det图片存储地址

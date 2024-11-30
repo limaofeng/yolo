@@ -1,7 +1,8 @@
-datasets/ccpd-2019
-datasets/coco8
-datasets/dota8
-data/CCPD2019
-data/CCPD2020
+datasets/*
+data/*
 runs/*
+models/__pycache__
+utils/__pycache__
 *.pt
+*.pth
+.vscode

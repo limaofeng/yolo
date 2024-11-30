@@ -18,9 +18,14 @@ import torch
 import time
 import os
 
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from models.LPRNet import LPRNet, CHARS
 from utils.load_lpr_data import LPRDataLoader
 
+project_path = os.getcwd()
 
 def sparse_tuple_for_ctc(T_length, lengths):
     input_lengths = []
@@ -52,8 +57,8 @@ def get_parser():
     parser = argparse.ArgumentParser(description='parameters to train net')
     parser.add_argument('--max_epoch', default=100, help='epoch to train the network')
     parser.add_argument('--img_size', default=[94, 24], help='the image size')
-    parser.add_argument('--train_img_dirs', default=r"K:\MyProject\datasets\ccpd\rec\train", help='the train images path')
-    parser.add_argument('--test_img_dirs', default=r"K:\MyProject\datasets\ccpd\rec\val", help='the test images path')
+    parser.add_argument('--train_img_dirs', default=project_path + "/datasets/ccpd-2019/rec_images/train", help='the train images path')
+    parser.add_argument('--test_img_dirs', default=project_path + "/datasets/ccpd-2019/rec_images/val", help='the test images path')
     parser.add_argument('--dropout_rate', default=0.5, help='dropout rate.')
     parser.add_argument('--learning_rate', default=0.01, help='base value of learning rate.')
     parser.add_argument('--lpr_max_len', default=8, help='license plate number max length.')
@@ -68,7 +73,7 @@ def get_parser():
     parser.add_argument('--momentum', default=0.9, type=float, help='momentum')
     parser.add_argument('--weight_decay', default=2e-5, type=float, help='Weight decay for SGD')
     parser.add_argument('--lr_schedule', default=[20, 40, 60, 80, 100], help='schedule for learning rate.')
-    parser.add_argument('--save_folder', default=r'../runs',
+    parser.add_argument('--save_folder', default=r'./runs',
                         help='Location to save checkpoint models')
     parser.add_argument('--pretrained_model', default='', help='no pretrain')
 
@@ -85,7 +90,8 @@ def collate_fn(batch):
         imgs.append(torch.from_numpy(img))
         labels.extend(label)
         lengths.append(length)
-    labels = np.asarray(labels).flatten().astype(np.int)
+    # labels = np.asarray(labels).flatten().astype(np.int)
+    labels = np.asarray(labels).flatten().astype(int)
     return (torch.stack(imgs, 0), torch.from_numpy(labels), lengths)
 
 def train():
@@ -99,9 +105,14 @@ def train():
         os.mkdir(args.save_folder)
 
     lprnet = LPRNet(lpr_max_len=args.lpr_max_len, phase=args.phase_train, class_num=len(CHARS), dropout_rate=args.dropout_rate)
-    device = torch.device("cuda:0" if args.cuda else "cpu")
+    device = torch.device("cuda" if args.cuda else "cpu")
     lprnet.to(device)
     print("Successful to build network!")
+    
+    # 仅在 cuda 可用的情况下应用 DataParallel
+    if torch.cuda.device_count() > 1:
+        print(f"Using {torch.cuda.device_count()} GPUs!")
+        lprnet = nn.DataParallel(lprnet)
 
     # load pretrained model
     if args.pretrained_model:
@@ -121,8 +132,9 @@ def train():
                 elif key.split('.')[-1] == 'bias':
                     m.state_dict()[key][...] = 0.01
 
-        lprnet.backbone.apply(weights_init)
-        lprnet.container.apply(weights_init)
+        # lprnet.backbone.apply(weights_init)
+        lprnet.module.backbone.apply(weights_init)
+        lprnet.module.container.apply(weights_init)
         print("initial net weights successful!")
 
     # define optimizer
@@ -153,7 +165,7 @@ def train():
             epoch += 1
 
         if iteration !=0 and iteration % args.save_interval == 0:
-            torch.save(lprnet.state_dict(), args.save_folder + 'LPRNet_' + '_iteration_' + repr(iteration) + '.pth')
+            torch.save(lprnet.state_dict(), args.save_folder + '/LPRNet_' + '_iteration_' + repr(iteration) + '.pth')
 
         if (iteration + 1) % args.test_interval == 0:
             Greedy_Decode_Eval(lprnet, test_dataset, args)
@@ -206,7 +218,7 @@ def train():
     Greedy_Decode_Eval(lprnet, test_dataset, args)
 
     # save final parameters
-    torch.save(lprnet.state_dict(), args.save_folder + 'lprnet-pretrain.pth')
+    torch.save(lprnet.state_dict(), args.save_folder + '/lprnet-pretrain.pth')
 
 def Greedy_Decode_Eval(Net, datasets, args):
     # TestNet = Net.eval()

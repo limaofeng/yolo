@@ -1,2 +1,4 @@
-torch==2.5.1
+#torch==2.5.1
 ultralytics
+imutils
+numpy==1.19.5
